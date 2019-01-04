@@ -1,0 +1,128 @@
+#include "Ultrasonic.h" //include the header file required to read from the ultrasonic rangers, which is the intellectual property of Grove, and can be found at https://github.com/Seeed-Studio/Grove_Ultrasonic_Ranger/archive/master.zip
+
+#define VMD1 3 //leftmost vibrating motor disc (user's perspective)
+#define VMD2 5 
+#define VMD3 6 //rightmost vibrating motor disc (user's perspective)
+
+#define BTN1 7 //define button macros
+#define BTN2 8
+
+#define POT 0 //define potentiometer macro
+
+Ultrasonic UR1(0); //create objects to read from the 6 ultrasonic rangers, UR1 is in the top left corner from the user's perspective
+Ultrasonic UR2(1); //UR2, bottom left corner from user's perspective
+Ultrasonic UR3(2); //upper middle
+Ultrasonic UR4(4); //lower middle
+Ultrasonic UR5(12); //top right corner
+Ultrasonic UR6(13); //bottom right corner
+
+long trigger;      //if reading from UR <= trigger, then activate VMD 
+bool buttoninit = false;
+
+enum mode {vmd3, overdrive, unassigned}; //mode enumeration
+mode Mode = unassigned; //mode variable
+
+void setup()
+{
+    while(buttoninit == false)
+  {
+if(digitalRead(BTN1) == HIGH) //mode selection
+    {
+   buttoninit = true;
+   Mode = vmd3;
+    }
+if(digitalRead(BTN2) == HIGH)
+    {
+   buttoninit = true;
+   Mode = overdrive;
+    }
+}   //pins are configured as input by default, so this converts the desired pins into output pins 
+pinMode(VMD1, OUTPUT);
+pinMode(VMD2, OUTPUT);
+pinMode(VMD3, OUTPUT);
+}
+
+void loop()
+{
+ if(digitalRead(BTN1) == HIGH)
+  {
+  Mode = vmd3; //mode selection
+  }
+  if(digitalRead(BTN2) == HIGH)
+  {
+Mode = overdrive;  
+  }
+
+trigger = analogRead(POT)/3; //read from potentiometer for the trigger point
+
+if(Mode == vmd3)
+  {
+if(UR1.MeasureInCentimeters() && UR2.MeasureInCentimeters() <= trigger)
+    {
+digitalWrite(VMD1, OUTPUT);
+    }
+    else //read from the first two ultrasonic rangers, if the measured distance is less than the trigger point, then activate the leftmost vibrating motor disc, and if not, deactivate the leftmost vibrating motor disc 
+    {  
+    digitalWrite(VMD1, INPUT);
+    }
+if(UR3.MeasureInCentimeters() && UR4.MeasureInCentimeters() <= trigger)
+    {
+    digitalWrite(VMD2, OUTPUT);
+    }
+    else
+    {  
+    digitalWrite(VMD2, INPUT);
+
+    }
+if(UR5.MeasureInCentimeters() && UR6.MeasureInCentimeters() <= trigger)
+    {
+    digitalWrite(VMD3, OUTPUT);
+    }
+    else
+    {  
+    digitalWrite(VMD3, INPUT);
+
+   }
+delay(90); // a delay of 90 milliseconds to conserve power
+    }
+
+if(Mode == overdrive)
+  {
+if(digitalRead(BTN1) == HIGH)
+  {
+  Mode = vmd3;
+  }
+  if(digitalRead(BTN2) == HIGH)
+  {
+Mode = overdrive;  
+  }
+
+trigger = analogRead(POT)/3; //read from potentiometer for the trigger point
+
+if(UR1.MeasureInCentimeters() && UR2.MeasureInCentimeters() <= trigger)
+    {
+digitalWrite(VMD1, OUTPUT);
+    }
+    else
+    {  
+    digitalWrite(VMD1, INPUT);
+    }
+if(UR3.MeasureInCentimeters() && UR4.MeasureInCentimeters() <= trigger)
+    {
+    digitalWrite(VMD2, OUTPUT);
+    }
+    else
+    {  
+    digitalWrite(VMD2, INPUT);
+
+    }
+if(UR5.MeasureInCentimeters() && UR6.MeasureInCentimeters() <= trigger)
+    {
+    digitalWrite(VMD3, OUTPUT);
+    }
+    else
+    {  
+    digitalWrite(VMD3, INPUT);
+   }
+    }
+}
